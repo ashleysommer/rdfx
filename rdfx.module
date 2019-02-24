@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Url;
+
 /**
  * @file
  * Extends the RDF API of Drupal core to support more RDF seralizations formats
@@ -11,7 +13,7 @@
  */
 function rdfx_init() {
   // Get the path to the library.
-  if (module_exists('libraries')) {
+  if (\Drupal::moduleHandler()->moduleExists('libraries')) {
     $path = libraries_get_path('ARC2') . '/arc';
   }
   else {
@@ -86,8 +88,8 @@ function rdfx_help($path, $arg) {
     case 'admin/config/services/rdf/namespaces';
       return '<p>' . t('Manage the namespaces and associated prefixes used by the site. Prefixes allow URIs to be shortened in the form of <a href="http://en.wikipedia.org/wiki/CURIE">CURIEs</a> (Compact URIs). For example, the CURIE %curie represents the URI %uri.', array('%curie' => 'dc:title', '%uri' => 'http://purl.org/dc/terms/title')) . '</p>';
     case 'admin/config/services/rdf/mappings':
-      if (module_exists('rdfui')) {
-        $message = t('Manage RDF mappings for entity types and field bundles used throughout the site. Some mappings are not editable through the UI. See the core RDF mapping API !documentation to find out how to modify these mappings.', array('!documentation' => l('documentation', 'http://drupal.org/developing/api/rdf')));
+      if (\Drupal::moduleHandler()->moduleExists('rdfui')) {
+        $message = t('Manage RDF mappings for entity types and field bundles used throughout the site. Some mappings are not editable through the UI. See the core RDF mapping API !documentation to find out how to modify these mappings.', array('!documentation' => \Drupal::l('documentation', Url::fromUri('http://drupal.org/developing/api/rdf'))));
       }
       else {
         $message = t('View RDF mappings for entity types and field bundles used throughout the site. Enabling the RDF UI module (bundled with RDFx) will allow you to configure many of these mappings.');
@@ -131,7 +133,7 @@ function rdfx_get_rdf_model($type, $id) {
   // Instantiates node resource as ARC2 class and set base and namespaces.
   $res = ARC2::getResource();
   $res->setUri($entity_uri);
-  $res->base = url('', array('absolute' => TRUE));
+  $res->base = \Drupal::url('', array('absolute' => TRUE));
   if (function_exists('rdf_get_namespaces')) {
     $res->ns = rdf_get_namespaces();
   }
@@ -330,7 +332,7 @@ function rdfx_resource_uri($type, $entity) {
   else {
     $uri = entity_uri($type, $entity);
   }
-  return url($uri['path'], array('absolute' => TRUE));
+  return \Drupal::url($uri['path'], array('absolute' => TRUE));
 
 }
 
@@ -399,8 +401,8 @@ function rdfx_requirements($phase) {
     else {
       $value = t('Not installed');;
       $severity = REQUIREMENT_ERROR;
-      $path = module_exists('libraries') ? libraries_get_path('ARC2') . '/arc/ARC2.php' : drupal_get_path('module', 'rdfx') . '/vendor/arc/ARC2.php';
-      $description = t('The RDFx module requires the ARC2 library to function properly. The simplest way to install ARC2 is by using the Drush command "drush rdf-download". Alternatively, you can !download the latest package, unzip it, and move/rename the folder so that the path to ARC2.php is %path', array('!download' => l('download', 'http://github.com/semsol/arc2/tarball/master'), '%path' => $path));
+      $path = \Drupal::moduleHandler()->moduleExists('libraries') ? libraries_get_path('ARC2') . '/arc/ARC2.php' : drupal_get_path('module', 'rdfx') . '/vendor/arc/ARC2.php';
+      $description = t('The RDFx module requires the ARC2 library to function properly. The simplest way to install ARC2 is by using the Drush command "drush rdf-download". Alternatively, you can !download the latest package, unzip it, and move/rename the folder so that the path to ARC2.php is %path', array('!download' => \Drupal::l('download', Url::fromUri('http://github.com/semsol/arc2/tarball/master')), '%path' => $path));
     }
     $requirements['rdfx_arc'] = array(
       'title' => t('RDFx ARC2 Library'),
@@ -416,7 +418,7 @@ function rdfx_requirements($phase) {
         'title' => t('RDFx Namespace Conflict'),
         'severity' => REQUIREMENT_ERROR,
         'value' => '',
-        'description' => t('One or more namespaces has conflicts.  See this page for more information:') . ' ' . l(t('RDF publishing settings'), 'admin/config/services/rdf/namespaces')
+        'description' => t('One or more namespaces has conflicts.  See this page for more information:') . ' ' . \Drupal::l(t('RDF publishing settings'), Url('admin/config/services/rdf/namespaces'))
       );
     }
   }
@@ -431,7 +433,7 @@ function rdfx_requirements($phase) {
 function rdfx_get_conflicting_namespaces() {
   $conflicting_namespaces = array();
 
-  $rdf_namespaces = module_invoke_all('rdf_namespaces');
+  $rdf_namespaces = \Drupal::moduleHandler()->invokeAll('rdf_namespaces');
 
   foreach ($rdf_namespaces as $prefix => $uris) {
     if (is_array($uris)) {

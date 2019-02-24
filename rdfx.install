@@ -60,7 +60,7 @@ function rdfx_schema() {
       'prefix' => array(
         'description' => 'The prefix as defined by the user for the main namespace, and by the source file for the additional namespaces.',
         'type' => 'varchar',
-        'length' => '255',
+        'length' => '150',
         'not null' => FALSE,
       ),
       'uri' => array(
@@ -72,7 +72,7 @@ function rdfx_schema() {
     ),
     'primary key' => array('nsid'),
     'unique keys' => array(
-      'gid_uri' => array('gid', 'uri'),
+      'gid_uri' => array('gid', array('uri', '150')),
     ),
   );
 
@@ -102,7 +102,7 @@ function rdfx_schema() {
     ),
     'primary key' => array('tid'),
     'unique keys' => array(
-      'nsid_ln' => array('nsid', 'local_name'),
+      'nsid_ln' => array('nsid', array('local_name', '150')),
     ),
   );
 
@@ -290,7 +290,8 @@ function rdfx_schema() {
  */
 function rdfx_update_7001() {
   module_enable(array(entity));
-  drupal_set_message('The Entity API module is now required by the RDFx module and has been enabled.');
+  $messenger = \Drupal::messenger();
+  $messenger->addMessage('The Entity API module is now required by the RDFx module and has been enabled.');
 }
 
 /**
@@ -298,11 +299,12 @@ function rdfx_update_7001() {
  */
 function rdfx_update_7002() {
   if (module_exists('libraries') && is_dir(libraries_get_path('arc'))) {
+    $messenger = \Drupal::messenger();
     if (mkdir(libraries_get_path('ARC2')) && rename(libraries_get_path('arc'), libraries_get_path('ARC2') . '/arc')) {
-      drupal_set_message('The ARC2 library has been moved to its new location.');
+        $messenger->addMessage('The ARC2 library has been moved to its new location.');
     }
     else {
-      drupal_set_message('There was a problem while moving the ARC library to its new location.', 'error');
+        $messenger->addMessage('There was a problem while moving the ARC library to its new location.', 'error');
     }
   }
 }

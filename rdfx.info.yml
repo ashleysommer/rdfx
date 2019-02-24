@@ -1,0 +1,9 @@
+name: 'RDFx'
+type: module
+description: 'Extends the RDF mapping API of Drupal core to provide more RDF seralization formats and other RDF capabilities.'
+package: 'RDF'
+version: VERSION
+core: 8.x
+dependencies:
+  - drupal:entity
+  - drupal:entity_rdf
