@@ -49,7 +49,7 @@ Download the following modules to avail more RDF features:
          Download the ARC2 library from
          http://github.com/semsol/arc2/tarball/master and extract it in the
          libraries directory such that you end up with the following file
-         structure: sites/all/libraries/arc/ARC2/ARC2.php
+         structure: sites/all/libraries/ARC2/arc/ARC2.php
 
 == Bug reports ==
 
