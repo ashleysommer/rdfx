@@ -8,27 +8,6 @@ use Drupal\Core\Url;
  * other RDF capabilities.
  */
 
-/**
- * Implements hook_init().
- */
-function rdfx_init() {
-  // Get the path to the library.
-  if (\Drupal::moduleHandler()->moduleExists('libraries')) {
-    $path = libraries_get_path('ARC2') . '/arc';
-  }
-  else {
-    $path = drupal_get_path('module', 'rdfx') . '/vendor/arc';
-  }
-
-  // Attempts to load the ARC2 library, if available.
-  if (!class_exists('ARC2') && file_exists($path . '/ARC2.php')) {
-    @include_once $path . '/ARC2.php';
-  }
-  module_load_include('inc', 'rdfx', 'rdfx.terms');
-  module_load_include('inc', 'rdfx', 'rdfx.import');
-  module_load_include('inc', 'rdfx', 'rdfx.query');
-}
-
 /*
  * Implements hook_permission().
  */
@@ -105,9 +84,11 @@ function rdfx_theme() {
   return array(
     'rdfx_mapping_admin_overview' => array(
       'variables' => array('bundle' => array(), 'rdftype' => array(), 'real_fields' => array(), 'fake_fields' => array()),
+      'function' => 'theme_rdfx_mapping_admin_overview',
     ),
     'rdfx_mapping_admin_overview_row' => array(
       'variables' => array('field' => array()),
+      'function' => 'theme_rdfx_mapping_admin_overview_row',
     ),
   );
 }
@@ -459,4 +440,91 @@ function rdfx_features_api() {
       'file' => drupal_get_path('module', 'rdfx') .'/rdfx.features.inc',
     ),
   );
+}
+
+/**
+ * Theme function to output the table for a bundle's mappings.
+ */
+function theme_rdfx_mapping_admin_overview($variables) {
+    $renderer = \Drupal::service('renderer');
+    $moduleHandler = \Drupal::moduleHandler();
+    $bundle_label = $variables['bundle']['label'];
+    $bundle = $variables['bundle'];
+    $real_fields = $variables['real_fields'];
+    $fake_fields = $variables['fake_fields'];
+    $rows = array();
+
+    // Add the table header for this bundle.
+    $header = array(t('Fields'), t('RDF predicates'), t('Mapping type'), t('Datatype'));
+    if ($moduleHandler->moduleExists('rdfui')) {
+        $header[] = t('Operations');
+    }
+
+    // Display a title for each bundle above the mappings table. If RDF UI is
+    // enabled, also add an 'edit' link.
+    $title = "<h3>$bundle_label</h3>";
+    $edit_link = ($moduleHandler->moduleExists('rdfui') && !empty($bundle['edit_path'])) ? ' (' . \Drupal::l(t('edit'), $bundle['edit_path']) . ')' : '';
+    $title .= "<p>" . t('RDF Types:') . ' ' . $variables['rdftype'] . $edit_link . '</p>';
+
+    // List all of the Field API fields and their mappings.
+    foreach ($real_fields as $name => $field) {
+        $rows[] = array(
+            'data' => theme_rdfx_mapping_admin_overview_row(array('field' => $field, 'field_name' => $name, 'edit_path' => $field['edit_path'])),
+        );
+    }
+
+    // Add any non-Field API entity attributes.
+    foreach ($fake_fields as $name => $field) {
+        $rows[] = array(
+            'data' =>  theme_rdfx_mapping_admin_overview_row(array('field' => $field, 'field_name' => $name, 'edit_path' => $field['edit_path'])),
+        );
+    }
+
+    // If there are no mappings, display a message inside the table.
+    if (!count($rows)) {
+        $rows[] = array(
+            'data' => array(array('data' => t('No mappings have been configured for this bundle.'), 'colspan' => 5))
+        );
+    }
+
+    // Return the table for this bundle.
+    return array(
+        '#prefix' => $title,
+        '#theme' => 'table',
+        '#rows' => $rows,
+        '#header' => $header,
+    );
+}
+
+/**
+ * Theme function to output a field's row in the bundle mapping table.
+ */
+function theme_rdfx_mapping_admin_overview_row($variables) {
+    $field = $variables['field'];
+    $moduleHandler = \Drupal::moduleHandler();
+    $field_label = '<strong>' . t($field['label']) . '</strong>';
+    $predicates = isset($field['rdf_mapping']['predicates']) ? t(implode(', ', $field['rdf_mapping']['predicates'])) : '';
+    $predicate_type = isset($field['rdf_mapping']['type']) ? check_plain($field['rdf_mapping']['type']) : 'property';
+    $datatype = isset($field['rdf_mapping']['datatype']) ? $field['rdf_mapping']['datatype'] : '';
+
+    $row = array($field_label, $predicates, $predicate_type, $datatype);
+
+    // Add operations links only if RDF UI is enabled.
+    if ($moduleHandler->moduleExists('rdfui')) {
+        $operations = '';
+        if (isset($variables['edit_path'])) {
+            // By adding the appropriate url fragment, we can open the corresponding
+            // vertical tab on the RDF mapping UI page. The fragment should correspond
+            // to the html id for each fieldset, which means certain characters need
+            // to be replaced. These replacement patterns are from drupal_html_id().
+            $id = ($variables['field_name'] == 'title') ? 'rdf-title' : $variables['field_name'];
+            $id = strtr(mb_strtolower($id), array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+            $id = preg_replace('/[^A-Za-z0-9\-_]/', '', $id);
+            $id = preg_replace('/\-+/', '-', $id);
+            $operations = \Drupal::l(t('edit'), $variables['edit_path'], array('fragment' => "edit-$id"));
+        }
+        $row[] = $operations;
+    }
+
+    return $row;
 }

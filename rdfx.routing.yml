@@ -1,0 +1,26 @@
+rdf.admin:
+  path: '/admin/config/services/rdf'
+  defaults:
+    _controller: '\Drupal\rdfx\Controller\RdfxController::adminOverview'
+    _title: 'RDF publishing settings'
+    _description: 'Configure how site content gets published in RDF.'
+  requirements:
+    _permission: 'administer rdf'
+
+rdf.admin.mappings:
+  path: '/admin/config/services/rdf/mappings'
+  defaults:
+    _controller: '\Drupal\rdfx\Controller\RdfxController::adminOverview'
+    _title: 'RDF mappings'
+    _description: 'Configure how site content gets published in RDF.'
+  requirements:
+    _permission: 'administer rdf'
+
+rdf.admin.namespaces:
+  path: '/admin/config/services/rdf/namespaces'
+  defaults:
+    _controller: '\Drupal\rdfx\Controller\RdfxController::adminNamespaces'
+    _title: 'RDF namespaces'
+    _description: 'See all namespaces and their prefixes.'
+  requirements:
+    _permission: 'administer rdf'

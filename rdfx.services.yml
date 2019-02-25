@@ -1,0 +1,5 @@
+services:
+  rdfx.event_subscriber:
+    class: Drupal\rdfx\EventSubscriber\RdfxSubscriber
+    tags:
+      - {name: event_subscriber}
